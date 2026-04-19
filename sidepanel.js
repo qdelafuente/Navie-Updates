@@ -248,6 +248,8 @@ const panelTabAjustes = document.getElementById("panelTabAjustes");
 const consentStatusRow = document.getElementById("consentStatus");
 const consentRevokeBtn = document.getElementById("consentRevokeBtn");
 const deleteAllDataBtn = document.getElementById("deleteAllDataBtn");
+const checkUpdatesBtn = document.getElementById("checkUpdatesBtn");
+const checkUpdatesStatus = document.getElementById("checkUpdatesStatus");
 const syncPrefSyllabiEl = document.getElementById("syncPrefSyllabi");
 const syncPrefGradebookEl = document.getElementById("syncPrefGradebook");
 const syncPrefAnnouncementsEl = document.getElementById("syncPrefAnnouncements");
@@ -915,6 +917,33 @@ if (consentRevokeBtn) consentRevokeBtn.addEventListener("click", async () => {
   updateConsentStatusIndicator();
   ensureConsent();
 });
+if (checkUpdatesBtn) checkUpdatesBtn.addEventListener("click", async () => {
+  checkUpdatesBtn.disabled = true;
+  checkUpdatesBtn.textContent = "Checking...";
+  checkUpdatesStatus.style.display = "none";
+
+  try {
+    const res = await sendMessage({ type: "CHECK_FOR_UPDATES" });
+    if (res?.updateAvailable) {
+      checkUpdatesStatus.textContent = `✓ Nueva versión disponible: v${res.newVersion}. Abriendo página de actualización...`;
+      checkUpdatesStatus.style.color = "#2e7d32";
+    } else if (res?.upToDate) {
+      checkUpdatesStatus.textContent = `✓ Ya tienes la última versión (v${res.currentVersion}).`;
+      checkUpdatesStatus.style.color = "#555";
+    } else {
+      checkUpdatesStatus.textContent = "No se pudo comprobar. Verifica tu conexión.";
+      checkUpdatesStatus.style.color = "#c0392b";
+    }
+  } catch {
+    checkUpdatesStatus.textContent = "Error al comprobar actualizaciones.";
+    checkUpdatesStatus.style.color = "#c0392b";
+  }
+
+  checkUpdatesStatus.style.display = "block";
+  checkUpdatesBtn.disabled = false;
+  checkUpdatesBtn.textContent = "Check for updates";
+});
+
 if (deleteAllDataBtn) deleteAllDataBtn.addEventListener("click", async () => {
   const confirmed = confirm("¿Seguro? Esto borrará todos tus datos locales incluyendo syllabi subidos, cursos sincronizados y configuración.");
   if (!confirmed) return;

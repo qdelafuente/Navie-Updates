@@ -60,6 +60,7 @@ export function compareVersions(a, b) {
 
 /**
  * Checkea si hay actualización disponible y si el usuario ya la descartó.
+ * Exportada para poder llamarla manualmente desde el botón de settings.
  */
 export async function checkForUpdate() {
   const release = await fetchLatestRelease();

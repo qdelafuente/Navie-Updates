@@ -17,7 +17,7 @@ import { runCombinedCourseQuery } from "./courseQueryOrchestrator.js";
 import { getAssignmentGrade, isAllGradesForCourseQuery, resolveCourseByMention, buildGradeItemList } from "./gradeLookupService.js";
 import { getOrFetchConversations, executePlan, formatResponse as formatCourseMessagesResponse } from "./courseMessagesService.js";
 import { findBestMatch } from "./textMatch.js";
-import { initUpdateChecker, handleUpdateAlarm } from "./updateManager.js";
+import { initUpdateChecker, handleUpdateAlarm, checkForUpdate, fetchLatestRelease, compareVersions, getLocalVersion } from "./updateManager.js";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
@@ -1377,6 +1377,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       touchLastActivity();
+
+      if (msg?.type === "CHECK_FOR_UPDATES") {
+        const release = await fetchLatestRelease();
+        const currentVersion = getLocalVersion();
+        if (!release) {
+          sendResponse({ ok: false });
+          return;
+        }
+        if (compareVersions(release.version, currentVersion) > 0) {
+          await checkForUpdate();
+          sendResponse({ ok: true, updateAvailable: true, newVersion: release.version, currentVersion });
+        } else {
+          sendResponse({ ok: true, upToDate: true, currentVersion });
+        }
+        return;
+      }
+
       if (msg?.type === "GET_ANNOUNCEMENTS") {
         const data = await chrome.storage.local.get(["announcementsData", "announcementsSyncedAt"]);
         sendResponse({
