@@ -1,0 +1,39 @@
+---
+description: No modificar el sistema de assignments/entregas al cambiar otras funciones
+alwaysApply: true
+---
+
+# Sistema de assignments/entregas — no tocar
+
+El **sistema de consulta de assignments (entregas, tareas, deadlines)** está aislado y funciona correctamente. Al modificar otras partes de la extensión (calendario, syllabi, chat, UI, etc.) **no debes cambiar** este sistema salvo que el usuario pida explícitamente cambios en los assignments.
+
+## Qué no modificar
+
+- **sidepanel.js** — funciones y lógica del módulo de assignments:
+  - `getAssignmentsContextBlock(gradebookByCourseId)` — único punto de integración para el prompt.
+  - `getNextThreeUpcoming`, `getUpcomingAssignmentsAll`, `getUpcomingAssignmentsForCourse`, `getUpcomingAssignments`.
+  - `buildGradebookContext` (y su uso dentro de `buildSystemPrompt`).
+  - `isAssignmentQuery`, `isAssignmentOnlyQuery`.
+  - `renderUpcomingWidget`, `formatDueDateForWidget`.
+  - En `buildSystemPrompt`: el bloque que añade gradebookBlob, "Entregas próximas (curso)", y la instrucción sobre ASSIGNMENTS / [ASSIGNMENTS_CONTEXT].
+  - En `sendChatMessage`: la llamada a `getAssignmentsContextBlock(gradebookByCourseId)` y la inyección de `assignmentsBlock` en el system prompt; la condición `isAssignmentOnlyQuery(text)` para no inyectar calendario.
+- **contentScript.js** — sincronización de gradebook (SYNC_GRADEBOOK_ONLY, SYNC_SYLLABI_IN_PAGE y la lógica que rellena gradebookColumns / gradebookByCourseId).
+- **background.js** — reenvío de mensajes de sincronización de gradebook/syllabi.
+
+## Integración permitida
+
+En el flujo del chat, el único contacto con el sistema de assignments es:
+
+1. Llamar a `getAssignmentsContextBlock(gradebookByCourseId)` para obtener el bloque `[ASSIGNMENTS_CONTEXT]`.
+2. Añadir ese bloque al system prompt (tal como está).
+3. Usar `isAssignmentOnlyQuery(text)` solo para decidir si se inyecta o no el calendario (no para cambiar la lógica de assignments).
+
+No refactorizar ni unir esta lógica con calendario, syllabus o course resolution. Mantener assignments como módulo aparte.
+
+## Cuándo sí tocar el sistema de assignments
+
+Solo cuando el usuario pida explícitamente cambios en:
+- consultas de entregas/assignments/tareas/deadlines,
+- formato de datos o de respuesta de la IA sobre assignments,
+- widget de próximas entregas,
+- o la fuente de datos (gradebook).

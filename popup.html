@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BB Syllabus Finder</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1 class="logo">BB Syllabus</h1>
+      <div class="header-actions">
+        <button type="button" id="syncBtn" class="btn btn-sync">Sync</button>
+        <button type="button" id="settingsBtn" class="btn btn-ghost" title="API Key">⚙</button>
+      </div>
+      <p id="syncStatus" class="sync-status"></p>
+    </header>
+
+    <div id="settingsPanel" class="settings-panel hidden">
+      <label for="apiKeyInput">OpenRouter API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-or-..." autocomplete="off" />
+      <p class="settings-hint">Save it to use the AI chat.</p>
+      <button type="button" id="saveKeyBtn" class="btn btn-primary">Save</button>
+    </div>
+
+    <main class="chat-main">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-input-wrap">
+        <textarea id="chatInput" class="chat-input" placeholder="Ask anything... e.g. give me the syllabus link for Physics" rows="2"></textarea>
+        <button type="button" id="sendBtn" class="btn btn-send">Send</button>
+      </div>
+    </main>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Navie - Blackboard AI",
+  "version": "0.3.0",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "scripting",
+    "cookies",
+    "sidePanel",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://blackboard.ie.edu/*",
+    "https://openrouter.ai/*",
+    "https://ltitools.ie.edu/*",
+    "https://iesurveys.bluera.com/*",
+    "https://api.github.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/pdf.min.js",
+        "lib/pdf.worker.min.js",
+        "pdfReadingOrder.js",
+        "scripts/update-extension-windows.bat",
+        "scripts/update-extension-mac.sh"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_title": "Abrir Navie - Blackboard AI",
+    "default_icon": {
+      "16": "Logo.png",
+      "48": "Logo.png",
+      "128": "Logo.png"
+    }
+  },
+  "icons": {
+    "16": "Logo.png",
+    "48": "Logo.png",
+    "128": "Logo.png"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://blackboard.ie.edu/*"],
+      "js": ["timeContext.js", "courseRegistry.js", "contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

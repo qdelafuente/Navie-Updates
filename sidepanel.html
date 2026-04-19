@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Navie - Blackboard AI</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <div id="splashScreen" class="splash-screen" aria-hidden="false">
+    <div class="splash-glow"></div>
+    <svg class="splash-reactor" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="100" cy="100" r="98" fill="#000d3d" stroke="#001f5c" stroke-width="2" />
+      <g class="splash-spinner-group">
+        <circle cx="100" cy="100" r="82" fill="none" stroke="#2a6eff" stroke-width="12" stroke-dasharray="4 6.304" opacity="0.9" />
+        <circle cx="100" cy="100" r="75" fill="none" stroke="#000d3d" stroke-width="2" />
+        <circle cx="100" cy="100" r="89" fill="none" stroke="#000d3d" stroke-width="2" />
+      </g>
+      <circle cx="100" cy="100" r="65" fill="#4cc9f0" fill-opacity="0.1" stroke="#2a6eff" stroke-width="3" />
+      <g class="splash-triangle-core">
+        <path class="splash-triangle-fx" d="M 50 60 L 150 60 L 100 155 Z" fill="none" stroke="#4cc9f0" stroke-width="4" />
+        <path class="splash-triangle-fx" d="M 60 68 L 140 68 L 100 145 Z M 100 95 L 60 68 M 100 95 L 140 68 M 100 95 L 100 145" fill="rgba(0, 40, 85, 0.5)" stroke="#4cc9f0" stroke-width="2" />
+        <circle cx="100" cy="95" r="4" fill="#fff" filter="drop-shadow(0 0 5px white)">
+          <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />
+        </circle>
+      </g>
+    </svg>
+  </div>
+  <!-- Consent overlay — shown on first use or when policy version changes.
+       Placed outside .app so it is visible even while the app is still hidden. -->
+  <div id="consentOverlay" class="consent-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+    <div class="consent-card">
+      <div class="consent-header">
+        <div class="consent-logo-row">
+          <svg class="consent-logo-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="32" height="32">
+            <circle cx="100" cy="100" r="98" fill="#000d3d" stroke="#2a6eff" stroke-width="4" />
+            <path d="M 60 68 L 140 68 L 100 145 Z M 100 95 L 60 68 M 100 95 L 140 68 M 100 95 L 100 145" fill="none" stroke="#4cc9f0" stroke-width="3" />
+            <circle cx="100" cy="95" r="4" fill="#fff" />
+          </svg>
+          <h2 id="consentTitle" class="consent-title">Before you start</h2>
+        </div>
+        <p class="consent-subtitle">Navie AI needs your permission to work</p>
+      </div>
+      <div class="consent-body">
+        <div class="consent-section">
+          <p class="consent-section-label">What Navie sends to the AI model</p>
+          <ul class="consent-list">
+            <li>Names and IDs of your enrolled courses</li>
+            <li>Assignment titles and due dates from your gradebook</li>
+            <li>Academic calendar events</li>
+            <li>Syllabus content and course announcements</li>
+            <li>Your conversation messages during the session</li>
+          </ul>
+        </div>
+        <div class="consent-section consent-section-safe">
+          <p class="consent-section-label consent-section-label--safe">What Navie NEVER sends to the AI</p>
+          <ul class="consent-list">
+            <li>Your name, email address or student ID</li>
+            <li>Your Blackboard password or login credentials</li>
+          </ul>
+        </div>
+        <p class="consent-transfer-note">Data is processed by <strong>OpenRouter / Anthropic</strong> (USA) under a Data Processing Agreement. It is never used to train AI models.</p>
+        <a id="consentPrivacyLink" class="consent-privacy-link" href="#" target="_blank" rel="noopener noreferrer">Read the full Privacy Policy</a>
+      </div>
+      <div class="consent-footer">
+        <button type="button" id="consentDeclineBtn" class="btn consent-btn-decline">No, thanks</button>
+        <button type="button" id="consentAcceptBtn" class="btn btn-primary consent-btn-accept">I agree — Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consent declined screen — shown when user clicks "No thanks" -->
+  <div id="consentDeclinedScreen" class="consent-declined-screen hidden" aria-hidden="true">
+    <div class="consent-declined-card">
+      <p class="consent-declined-icon" aria-hidden="true">🔒</p>
+      <h2 class="consent-declined-title">Chat unavailable</h2>
+      <p class="consent-declined-body">Navie requires your consent to send academic data to the AI model. Without it, the chat cannot work.</p>
+      <p class="consent-declined-body">You can still use Options to view syllabi, assignments and announcements.</p>
+      <button type="button" id="consentDeclinedRetryBtn" class="btn btn-primary" style="margin-top: 16px;">Review consent</button>
+    </div>
+  </div>
+
+  <div class="app app-hidden">
+    <header class="header">
+      <div class="header-left">
+        <h1 class="logo">Navie</h1>
+        <p class="tagline">Blackboard AI</p>
+      </div>
+      <div class="header-actions">
+        <span id="examDatesStatusDot" class="exam-dates-status exam-dates-status--loading" title="Loading midterm and final dates" aria-label="Loading midterm and final dates"></span>
+        <button type="button" id="panelToggleBtn" class="btn btn-ghost" title="Options">⋮</button>
+      </div>
+    </header>
+
+    <section id="upcomingWidget" class="upcoming-widget" aria-label="Assignments, Announcements, and Messages">
+      <div class="upcoming-widget-header">
+        <div id="upcomingWidgetLoading" class="upcoming-widget-loading" aria-hidden="false">
+          <div class="loading-spinner-small"></div>
+        </div>
+        <div id="upcomingWidgetToggle" class="upcoming-widget-toggle hidden" aria-hidden="true" data-active="0">
+          <span class="upcoming-widget-toggle-slider" aria-hidden="true"></span>
+          <button type="button" id="upcomingWidgetToggleAssignments" class="upcoming-widget-toggle-btn active" aria-pressed="true">Assignments</button>
+          <button type="button" id="upcomingWidgetToggleAnnouncements" class="upcoming-widget-toggle-btn" aria-pressed="false">Announcements</button>
+          <button type="button" id="upcomingWidgetToggleMessages" class="upcoming-widget-toggle-btn" aria-pressed="false">Messages</button>
+        </div>
+      </div>
+      <ul id="upcomingWidgetList" class="upcoming-widget-list"></ul>
+      <p id="upcomingWidgetEmpty" class="upcoming-widget-empty hidden"></p>
+    </section>
+
+    <aside id="sidePanel" class="side-panel" aria-label="Options">
+      <div class="side-panel-header">
+        <span class="side-panel-title">Options</span>
+        <button type="button" id="sidePanelClose" class="btn btn-ghost side-panel-close hidden" title="Close">×</button>
+      </div>
+      <div class="side-panel-sync">
+        <button type="button" id="syllabiAccessBtn" class="btn btn-sync side-panel-tab">View syllabus list</button>
+        <button type="button" id="panelTabSyllabusManager" class="btn btn-sync side-panel-tab">Syllabus Manager</button>
+        <button type="button" id="panelTabAnnouncements" class="btn btn-sync side-panel-tab">Announcements</button>
+        <button type="button" id="panelTabAssignments" class="btn btn-sync side-panel-tab">Assignments</button>
+        <button type="button" id="panelTabMessages" class="btn btn-sync side-panel-tab">Messages</button>
+        <button type="button" id="panelTabCourseCategories" class="btn btn-sync side-panel-tab hidden">Course categories</button>
+        <!-- Hidden from sidebar UI (panels + logic unchanged); remove `hidden` to show again -->
+        <button type="button" id="panelTabMidtermSessions" class="btn btn-sync side-panel-tab">Midterm sessions</button>
+        <button type="button" id="panelTabMidtermDates" class="btn btn-sync side-panel-tab">Midterm dates</button>
+        <button type="button" id="panelTabFinalsSessions" class="btn btn-sync side-panel-tab">Finals session</button>
+        <button type="button" id="panelTabFinalDates" class="btn btn-sync side-panel-tab">Final dates</button>
+        <button type="button" id="panelTabSyllabusTextLog" class="btn btn-sync side-panel-tab hidden">Syllabus text log</button>
+        <button type="button" id="panelTabAnnouncementsTextLog" class="btn btn-sync side-panel-tab hidden">Announcements text log</button>
+        <button type="button" id="panelTabMessagesTextLog" class="btn btn-sync side-panel-tab hidden">Messages text log</button>
+        <button type="button" id="panelTabAjustes" class="btn btn-sync side-panel-tab">Settings</button>
+      </div>
+      <div class="side-panel-content">
+        <div id="settingsPanelContent" class="side-panel-pane hidden">
+          <div class="side-panel-sync-in-ajustes">
+            <button type="button" id="syncCoursesBtn" class="btn btn-ghost">Sync courses</button>
+            <button type="button" id="syncBtn" class="btn btn-sync">Sync syllabi</button>
+            <button type="button" id="announcementsSyncBtn" class="btn btn-sync">Sync announcements</button>
+          </div>
+          <p id="announcementsStatus" class="announcements-status settings-announcements-status"></p>
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect" class="settings-select">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+          <p class="settings-hint">Theme preference is saved automatically and will be restored next time.</p>
+          <label for="apiKeyInput">OpenRouter API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-or-..." autocomplete="off" />
+          <p class="settings-hint">Stored in your browser and persists when the extension is closed.</p>
+          <p id="keySavedHint" class="settings-saved hidden">API key saved.</p>
+          <button type="button" id="saveKeyBtn" class="btn btn-primary">Save</button>
+          <div class="settings-divider"></div>
+          <div id="consentStatus" class="consent-status-row">
+            <span class="consent-status-icon" aria-hidden="true"></span>
+            <div class="consent-status-text">
+              <span class="consent-status-label"></span>
+              <span class="consent-status-meta"></span>
+            </div>
+            <button type="button" id="consentRevokeBtn" class="btn btn-ghost consent-status-revoke hidden">Revoke</button>
+          </div>
+          <div class="settings-divider"></div>
+          <button type="button" id="deleteAllDataBtn" class="btn btn-ghost delete-data-btn">Delete all my data</button>
+        </div>
+        <div id="midtermSessionsPanelContent" class="side-panel-pane hidden" aria-label="Midterm sessions">
+          <h2 class="announcements-panel-title">Midterm sessions</h2>
+          <p class="syllabi-pane-hint">Session numbers where the midterm exam is scheduled, detected from syllabus text. Current semester courses only.</p>
+          <button type="button" id="midtermSessionsRefreshBtn" class="btn btn-sync" style="margin-bottom: 12px;">Refresh</button>
+          <div id="midtermSessionsStatus" class="announcements-status"></div>
+          <div id="midtermSessionsList" class="announcements-list-container midterm-sessions-list"></div>
+        </div>
+        <div id="midtermDatesPanelContent" class="side-panel-pane hidden" aria-label="Midterm dates">
+          <h2 class="announcements-panel-title">Midterm dates</h2>
+          <p class="syllabi-pane-hint">Midterm session and date/time per course (cached). Data is refreshed in the background at 9:00, 13:00, 17:00 and 21:00 local time and persists when you close the extension.</p>
+          <button type="button" id="midtermDatesRefreshBtn" class="btn btn-sync" style="margin-bottom: 12px;">Refresh</button>
+          <div id="midtermDatesStatus" class="announcements-status"></div>
+          <div id="midtermDatesList" class="announcements-list-container midterm-dates-list"></div>
+        </div>
+        <div id="finalsSessionsPanelContent" class="side-panel-pane hidden" aria-label="Finals session">
+          <h2 class="announcements-panel-title">Finals session</h2>
+          <p class="syllabi-pane-hint">Session numbers where the final exam is scheduled, detected from syllabus text. Current semester courses only.</p>
+          <button type="button" id="finalsSessionsRefreshBtn" class="btn btn-sync" style="margin-bottom: 12px;">Refresh</button>
+          <div id="finalsSessionsStatus" class="announcements-status"></div>
+          <div id="finalsSessionsList" class="announcements-list-container finals-sessions-list"></div>
+        </div>
+        <div id="finalDatesPanelContent" class="side-panel-pane hidden" aria-label="Final dates">
+          <h2 class="announcements-panel-title">Final dates</h2>
+          <p class="syllabi-pane-hint">Final exam session and date/time per course (cached). Data is refreshed in the background at 9:00, 13:00, 17:00 and 21:00 local time and persists when you close the extension.</p>
+          <button type="button" id="finalDatesRefreshBtn" class="btn btn-sync" style="margin-bottom: 12px;">Refresh</button>
+          <div id="finalDatesStatus" class="announcements-status"></div>
+          <div id="finalDatesList" class="announcements-list-container final-dates-list"></div>
+        </div>
+        <div id="announcementsTextLogPanelContent" class="side-panel-pane hidden" aria-label="Announcements text log">
+          <h2 class="announcements-panel-title">Announcements text log</h2>
+          <p class="syllabi-pane-hint">Click a button to load and display all announcements text for that course. The text can be copied.</p>
+          <input type="text" id="announcementsTextLogSearch" class="syllabi-search-input" placeholder="Search courses..." autocomplete="off" />
+          <div id="announcementsTextLogList" class="syllabus-text-log-list"></div>
+          <div class="syllabus-text-log-output-wrap">
+            <div class="syllabus-text-log-output-header">
+              <span id="announcementsTextLogTitle" class="syllabus-text-log-title">Select a course</span>
+              <button type="button" id="announcementsTextLogCopyBtn" class="btn btn-ghost syllabus-text-log-copy-btn hidden" title="Copy to clipboard">Copy</button>
+            </div>
+            <pre id="announcementsTextLogPre" class="syllabus-text-log-pre" role="log">—</pre>
+          </div>
+        </div>
+        <div id="messagesTextLogPanelContent" class="side-panel-pane hidden" aria-label="Messages text log">
+          <h2 class="announcements-panel-title">Messages text log</h2>
+          <p class="syllabi-pane-hint">Click a button to load and display all messages text for that course (current semester). The text can be copied.</p>
+          <input type="text" id="messagesTextLogSearch" class="syllabi-search-input" placeholder="Search courses..." autocomplete="off" />
+          <div id="messagesTextLogList" class="syllabus-text-log-list"></div>
+          <div class="syllabus-text-log-output-wrap">
+            <div class="syllabus-text-log-output-header">
+              <span id="messagesTextLogTitle" class="syllabus-text-log-title">Select a course</span>
+              <button type="button" id="messagesTextLogCopyBtn" class="btn btn-ghost syllabus-text-log-copy-btn hidden" title="Copy to clipboard">Copy</button>
+            </div>
+            <pre id="messagesTextLogPre" class="syllabus-text-log-pre" role="log">—</pre>
+          </div>
+        </div>
+        <div id="syllabusTextLogPanelContent" class="side-panel-pane hidden" aria-label="Syllabus text log">
+          <h2 class="announcements-panel-title">Syllabus text log</h2>
+          <p class="syllabi-pane-hint">Click a button to load and display the full syllabus text (from uploaded PDF or Blackboard). The text can be copied.</p>
+          <input type="text" id="syllabusTextLogSearch" class="syllabi-search-input" placeholder="Search courses..." autocomplete="off" />
+          <div id="syllabusTextLogList" class="syllabus-text-log-list"></div>
+          <div class="syllabus-text-log-output-wrap">
+            <div class="syllabus-text-log-output-header">
+              <span id="syllabusTextLogTitle" class="syllabus-text-log-title">Select a course</span>
+              <button type="button" id="syllabusTextLogCopyBtn" class="btn btn-ghost syllabus-text-log-copy-btn hidden" title="Copy to clipboard">Copy</button>
+            </div>
+            <pre id="syllabusTextLogPre" class="syllabus-text-log-pre" role="log">—</pre>
+          </div>
+        </div>
+        <div id="courseCategoriesPanelContent" class="side-panel-pane hidden" aria-label="Course categories">
+          <h2 class="announcements-panel-title">Course categories</h2>
+          <p class="syllabi-pane-hint">Courses grouped by Blackboard category (Q1, Q2, ANNUAL, Organizations, Other).</p>
+          <p id="courseCategoriesSemester" class="course-categories-semester" aria-live="polite"></p>
+          <div id="courseCategoriesStatus" class="announcements-status"></div>
+          <div id="courseCategoriesList" class="announcements-list-container"></div>
+        </div>
+        <div id="syllabiPanelContent" class="side-panel-pane hidden" aria-hidden="true">
+          <p class="syllabi-pane-hint">Courses obtained by the extension. Click to open the syllabus.</p>
+          <input type="text" id="syllabiSearchInput" class="syllabi-search-input" placeholder="Search syllabus..." autocomplete="off" />
+          <div id="syllabiListContainer" class="syllabi-list-container"></div>
+        </div>
+        <div id="syllabusTestPanelContent" class="side-panel-pane hidden">
+          <label for="syllabusTestCourseId">Course ID</label>
+          <input type="text" id="syllabusTestCourseId" class="syllabus-test-input" placeholder="e.g. _126054_1" autocomplete="off" />
+          <button type="button" id="syllabusTestBtn" class="btn btn-sync" style="margin-top: 8px; width: 100%;">Get content</button>
+          <p id="syllabusTestStatus" class="syllabus-test-status"></p>
+          <div class="syllabus-test-search-wrap">
+            <label for="syllabusTestSearch" class="syllabus-test-search-label">Search in HTML</label>
+            <input type="text" id="syllabusTestSearch" class="syllabus-test-input syllabus-test-search-input" placeholder="Text to search…" autocomplete="off" />
+            <p id="syllabusTestSearchCount" class="syllabus-test-search-count" aria-live="polite"></p>
+          </div>
+          <div id="syllabusTestOut" class="syllabus-test-out" role="log"></div>
+        </div>
+        <div id="gradesDebugPanelContent" class="side-panel-pane hidden">
+          <h2 class="syllabus-manager-title">Grades page (_136261_1)</h2>
+          <p class="syllabus-manager-hint">Static debug view of the Ultra grades page for this course.</p>
+          <button type="button" id="gradesDebugLoadBtn" class="btn btn-sync" style="margin-top: 8px; width: 100%;">Load once</button>
+          <p id="gradesDebugStatus" class="syllabus-test-status"></p>
+          <div class="syllabus-test-search-wrap">
+            <label for="gradesDebugSearch" class="syllabus-test-search-label">Search in HTML</label>
+            <input type="text" id="gradesDebugSearch" class="syllabus-test-input syllabus-test-search-input" placeholder="Text to search…" autocomplete="off" />
+            <p id="gradesDebugSearchCount" class="syllabus-test-search-count" aria-live="polite"></p>
+          </div>
+          <pre id="gradesDebugOut" class="syllabus-test-out" role="log"></pre>
+        </div>
+        <div id="logPanelContent" class="side-panel-pane hidden">
+          <p id="syncStatus" class="sync-status sync-status-in-log"></p>
+          <div class="log-search-wrap">
+            <label for="logSearchInput" class="log-search-label">Search in log</label>
+            <input type="text" id="logSearchInput" class="log-search-input" placeholder="Text, URL or course to search…" autocomplete="off" />
+            <p id="logSearchCount" class="log-search-count" aria-live="polite"></p>
+          </div>
+          <pre id="syncLogPre" class="sync-log-pre"></pre>
+        </div>
+        <div id="syllabusManagerPanelContent" class="side-panel-pane hidden" aria-label="Syllabus Manager">
+          <h2 class="syllabus-manager-title">Syllabus Manager</h2>
+          <p class="syllabus-manager-hint">Files are stored in your extension (not on Blackboard).</p>
+          <div id="syllabusManagerBanner" class="syllabus-manager-banner hidden"></div>
+          <input type="text" id="syllabusManagerSearch" class="syllabus-manager-search" placeholder="Search courses..." autocomplete="off" />
+          <div id="syllabusManagerSort" class="syllabus-manager-sort">
+            <button type="button" data-sort="missing">Missing first</button>
+            <button type="button" data-sort="name">Name A–Z</button>
+          </div>
+          <div id="syllabusManagerList" class="syllabus-manager-list"></div>
+          <input type="file" id="syllabusManagerFileInput" accept="application/pdf" class="hidden" />
+        </div>
+        <div id="announcementsPanelContent" class="side-panel-pane hidden" aria-label="Announcements">
+          <h2 class="announcements-panel-title">Announcements</h2>
+          <div id="announcementsListContainer" class="announcements-list-container"></div>
+        </div>
+        <div id="assignmentsPanelContent" class="side-panel-pane hidden" aria-label="Assignments">
+          <h2 class="announcements-panel-title">Assignments</h2>
+          <div id="assignmentsListContainer" class="announcements-list-container"></div>
+        </div>
+        <div id="messagesPanelContent" class="side-panel-pane hidden" aria-label="Messages">
+          <h2 class="announcements-panel-title">Messages</h2>
+          <div id="messagesListContainer" class="announcements-list-container"></div>
+        </div>
+      </div>
+    </aside>
+    <div id="sidePanelBackdrop" class="side-panel-backdrop hidden" aria-hidden="true"></div>
+    <div id="announcementGateOverlay" class="announcement-gate-overlay hidden" aria-hidden="true">
+      <div class="announcement-gate-card" role="dialog" aria-modal="true" aria-labelledby="announcementGateTitle">
+        <div class="announcement-gate-header">
+          <p class="announcement-gate-eyebrow">Unread announcement</p>
+          <h2 id="announcementGateTitle" class="announcement-gate-title">Final Exams</h2>
+          <p id="announcementGateMeta" class="announcement-gate-meta"></p>
+        </div>
+        <div id="announcementGateScroll" class="announcement-gate-scroll" tabindex="0">
+          <pre id="announcementGateBody" class="announcement-gate-body"></pre>
+        </div>
+        <div class="announcement-gate-footer">
+          <div class="announcement-gate-actions-text">
+            <p id="announcementGateHint" class="announcement-gate-hint">Open the announcement in Blackboard to continue using Jarvis.</p>
+            <a id="announcementGateLink" class="announcement-gate-link" href="#" target="_blank" rel="noopener">Open announcement</a>
+          </div>
+          <button type="button" id="announcementGateContinue" class="btn btn-primary">Open announcement and continue</button>
+        </div>
+      </div>
+    </div>
+    <div id="surveyGateOverlay" class="survey-gate-overlay hidden" aria-hidden="true">
+      <div class="survey-gate-card" role="dialog" aria-modal="true" aria-labelledby="surveyGateTitle">
+        <p class="survey-gate-eyebrow">Survey required</p>
+        <h2 id="surveyGateTitle" class="survey-gate-title">Complete pending Blackboard surveys</h2>
+        <p id="surveyGateBody" class="survey-gate-body">You must complete the pending survey before using Navie.</p>
+        <div class="survey-gate-actions">
+          <a id="surveyGateLink" class="btn btn-primary" href="#" target="_blank" rel="noopener">Open survey</a>
+          <button type="button" id="surveyGateRefresh" class="btn btn-ghost">I completed it — Check again</button>
+        </div>
+      </div>
+    </div>
+
+    <main id="chatMain" class="chat-main">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-input-wrap">
+        <textarea id="chatInput" class="chat-input" placeholder="Prompt here" rows="1"></textarea>
+        <div class="chat-input-actions">
+          <button type="button" id="sendBtn" class="btn btn-send" title="Send" aria-label="Send">
+            <svg class="btn-send-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
+          </button>
+          <button type="button" id="clearChatBtn" class="btn btn-clear-chat" title="Clear chat" aria-label="Clear chat">
+            <svg class="btn-clear-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="pdfReadingOrder.js"></script>
+  <script src="timeContext.js"></script>
+  <script src="calendar.js"></script>
+  <script src="courseRegistry.js"></script>
+  <script src="announcements.js"></script>
+  <script src="intentRouter.js"></script>
+  <script src="navieClassifier.js"></script>
+  <script src="promptRules.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

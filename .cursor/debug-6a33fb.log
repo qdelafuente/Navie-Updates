@@ -1,0 +1,2 @@
+{"sessionId":"6a33fb","runId":"pre-fix1","hypothesisId":"H-path","location":"sidepanel.js:sendChatMessage:beforeRouting","message":"sendChatMessage routing flags","data":{"text":"when are all my midterms?","isExamDate":true,"isCourse":false,"isGlobalMidterm":true},"timestamp":1772726337285}
+{"sessionId":"6a33fb","runId":"pre-fix1","hypothesisId":"H-midterm","location":"sidepanel.js:sendChatMessage:isGlobalMidtermQuestion","message":"Global midterm branch taken","data":{"text":"when are all my midterms?"},"timestamp":1772726337292}

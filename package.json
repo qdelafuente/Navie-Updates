@@ -1,0 +1,8 @@
+{
+  "name": "jarvis-blackboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/gradeLookup.test.js && node src/courseClassifier/__tests__/courseClassifier.test.js && node tests/midtermDates.test.js && node tests/midtermSessionDetector.test.js && node tests/finalExamSessionDetector.test.js && node tests/calendarMidtermEnricher.test.js && node tests/intentRouter.test.js"
+  }
+}

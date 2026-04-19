@@ -1,0 +1,32 @@
+---
+description: No modificar el sistema de calendario/sesiones al cambiar otras funciones
+alwaysApply: true
+---
+
+# Sistema de calendario — no tocar
+
+El **sistema de consulta de sesiones y calendario** está aislado y funciona correctamente. Al modificar otras partes de la extensión (syllabi, gradebook, chat, UI, etc.) **no debes cambiar** este sistema salvo que el usuario pida explícitamente cambios en el calendario.
+
+## Qué no modificar
+
+- **calendar.js** — módulo completo (rangos, normalización, dedupe, `calendar.query`, detección de preguntas).
+- **contentScript.js** — solo el handler `GET_CALENDAR_ITEMS` y la función `fetchCalendarItems`.
+- **background.js** — solo el bloque que reenvía `GET_CALENDAR_ITEMS` al content script.
+- **sidepanel.js** — solo la función `getCalendarContextForUserQuery(text)` y su uso (una llamada que obtiene `calendarBlock` y escribe en el log). No toques la lógica interna de calendario dentro del flujo del chat.
+
+## Integración permitida
+
+En sidepanel, el único punto de contacto con el calendario es:
+
+1. Llamar a `getCalendarContextForUserQuery(text)` para obtener `{ calendarBlock, logLine }`.
+2. Si `calendarBlock` existe, añadirlo al system prompt y, si hay `logLine`, añadirla al log.
+
+No refactors que “simplifiquen” o “unan” esta lógica con otras (syllabus, course resolution, etc.). Mantener el calendario como un módulo aparte.
+
+## Cuándo sí tocar el calendario
+
+Solo cuando el usuario pida explícitamente cambios en:
+- consultas de sesiones/clases,
+- rangos (hoy, mañana, semana que viene, etc.),
+- formato de respuesta de la IA sobre el calendario,
+- o el endpoint/contrato del calendario.
