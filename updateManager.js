@@ -99,18 +99,15 @@ function getExtensionDirectory() {
 
 /**
  * Envía el ZIP al native host para que lo instale.
+ * El native host conoce la ruta de la extensión por su propia ubicación en disco.
  * @returns {{ ok: boolean, message: string }}
  */
-async function installViaNameativeHost(zipUrl) {
+async function installViaNativeHost(zipUrl) {
   return new Promise((resolve) => {
     try {
       chrome.runtime.sendNativeMessage(
         NATIVE_HOST,
-        {
-          action: "update",
-          url: zipUrl,
-          extensionId: chrome.runtime.id
-        },
+        { action: "update", url: zipUrl },
         (response) => {
           if (chrome.runtime.lastError) {
             resolve({ ok: false, message: chrome.runtime.lastError.message });
@@ -148,7 +145,7 @@ export async function checkForUpdate() {
 
   if (nativeHostOk && release.zipUrl) {
     // Instalación automática
-    const result = await installViaNameativeHost(release.zipUrl);
+    const result = await installViaNativeHost(release.zipUrl);
     if (result.ok) {
       // Notificar al usuario que solo necesita recargar
       await notifyReloadNeeded(release.version);

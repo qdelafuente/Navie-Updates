@@ -42,7 +42,8 @@ zip -r "$OUTPUT" \
   textMatch.js \
   userIdentity.js \
   Logo.png \
-  scripts/ \
+  scripts/install-native-host-mac.command \
+  scripts/install-native-host-windows.bat \
   native-host/ \
   lib/ \
   assets/ \

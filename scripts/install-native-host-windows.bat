@@ -1,63 +1,55 @@
 @echo off
 REM ─────────────────────────────────────────────────────────────────────────
 REM install-native-host-windows.bat
-REM Instala el Native Messaging host de Navie en Windows.
-REM Ejecuta este script UNA VEZ después de instalar la extensión.
+REM Instala el actualizador automático de Navie en Windows.
+REM El usuario solo necesita hacer DOBLE CLIC en este archivo.
+REM No requiere permisos de administrador.
 REM ─────────────────────────────────────────────────────────────────────────
 
 setlocal EnableDelayedExpansion
 
-REM Obtener el directorio de la extensión (un nivel arriba de scripts\)
+REM Ruta del script Python (dentro de la extensión, no hay que copiar nada)
 set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 set "EXTENSION_DIR=%SCRIPT_DIR:~0,-8%"
-REM Quitar la barra final
 if "%EXTENSION_DIR:~-1%"=="\" set "EXTENSION_DIR=%EXTENSION_DIR:~0,-1%"
 
-set "PYTHON_HOST=%EXTENSION_DIR%\native-host\navie_updater.py"
-set "DEST_DIR=%LOCALAPPDATA%\Navie\native-host"
-set "DEST_SCRIPT=%DEST_DIR%\navie_updater.py"
+set "PYTHON_SCRIPT=%EXTENSION_DIR%\native-host\navie_updater.py"
+set "MANIFEST_DIR=%LOCALAPPDATA%\Google\Chrome\User Data\NativeMessagingHosts"
+set "MANIFEST_PATH=%MANIFEST_DIR%\com.navie.updater.json"
 set "REG_KEY=HKCU\Software\Google\Chrome\NativeMessagingHosts\com.navie.updater"
-set "MANIFEST_PATH=%DEST_DIR%\com.navie.updater.json"
 
-REM ── Verificar Python3 ──────────────────────────────────────────────────────
+REM ── Verificar Python ──────────────────────────────────────────────────────
 python --version >nul 2>&1
 if errorlevel 1 (
-  powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Python 3 no está instalado.`n`nDescárgalo desde python.org', 'Navie Updater', 'OK', 'Error')"
+  powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Python 3 no esta instalado.`nDescargalo desde python.org', 'Navie', 'OK', 'Error')"
   exit /b 1
 )
 
-REM ── Confirmar instalación ──────────────────────────────────────────────────
-powershell -Command "$r = [System.Windows.Forms.MessageBox]::Show('Navie necesita instalar un componente para las actualizaciones automáticas.', 'Navie — Instalar actualizador', [System.Windows.Forms.MessageBoxButtons]::OKCancel, [System.Windows.Forms.MessageBoxIcon]::Information); if ($r -ne 'OK') { exit 1 }" 2>nul
-if errorlevel 1 (
-  echo Instalación cancelada.
-  exit /b 0
-)
+REM ── Confirmar ────────────────────────────────────────────────────────────
+powershell -Command "Add-Type -AssemblyName System.Windows.Forms; $r = [System.Windows.Forms.MessageBox]::Show('Navie instalara el componente de actualizaciones automaticas.`n`n✓ No requiere contrasena de administrador.', 'Navie — Actualizaciones automaticas', [System.Windows.Forms.MessageBoxButtons]::OKCancel, [System.Windows.Forms.MessageBoxIcon]::Information); if ($r -ne 'OK') { exit 1 }"
+if errorlevel 1 exit /b 0
 
-REM ── Crear carpeta de destino ───────────────────────────────────────────────
-if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
+REM ── Crear carpeta de native messaging hosts (usuario, sin admin) ──────────
+if not exist "%MANIFEST_DIR%" mkdir "%MANIFEST_DIR%"
 
-REM ── Copiar el script Python ────────────────────────────────────────────────
-copy /Y "%PYTHON_HOST%" "%DEST_SCRIPT%" >nul
-
-REM ── Escribir el manifest JSON ──────────────────────────────────────────────
+REM ── Escribir manifest JSON apuntando al script en la extensión ────────────
 python -c "
-import json, os
+import json
 manifest = {
     'name': 'com.navie.updater',
     'description': 'Navie Extension Auto-Updater',
-    'path': r'%DEST_SCRIPT%',
+    'path': r'%PYTHON_SCRIPT%',
     'type': 'stdio',
     'allowed_origins': ['chrome-extension://omljpaaaikpbmpmcifkldfpjgogipmkp/']
 }
 with open(r'%MANIFEST_PATH%', 'w') as f:
     json.dump(manifest, f, indent=2)
-print('Manifest escrito')
 "
 
-REM ── Registrar en el registro de Windows ───────────────────────────────────
+REM ── Registrar en HKCU (sin admin) ────────────────────────────────────────
 reg add "%REG_KEY%" /ve /t REG_SZ /d "%MANIFEST_PATH%" /f >nul
 
-powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Actualizador de Navie instalado correctamente.`n`nA partir de ahora las actualizaciones se instalan automaticamente.', 'Navie — Instalacion completada', 'OK', 'Asterisk')"
+powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('Las actualizaciones de Navie ahora se instalan automaticamente.`n`nCuando haya una nueva version, solo tendras que recargar la extension en chrome://extensions.', 'Navie — Instalacion completada', 'OK', 'Asterisk')"
 
-echo Instalacion completada.
 endlocal

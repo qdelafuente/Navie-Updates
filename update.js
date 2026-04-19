@@ -16,11 +16,11 @@ function updateDownloadLink() {
   const btn = document.getElementById("downloadBtn");
   if (!btn) return;
   if (selectedOS === "mac") {
-    btn.href = chrome.runtime.getURL("scripts/install-native-host-mac.sh");
-    btn.download = "install-navie-updater-mac.sh";
+    btn.href = chrome.runtime.getURL("scripts/install-native-host-mac.command");
+    btn.download = "install-navie-updater.command";
   } else {
     btn.href = chrome.runtime.getURL("scripts/install-native-host-windows.bat");
-    btn.download = "install-navie-updater-windows.bat";
+    btn.download = "install-navie-updater.bat";
   }
 }
 

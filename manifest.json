@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Navie - Blackboard AI",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0HF5xIHk3miZBhu6KzxDzDUbJ3HaBQHrndQ2fHos2Xtub1+M+iN273ZyRgzzqNgwEPl+/c5iU28MIxmwA8lWUZ1Jov6reA4k7T0qCvaUswXfsnS6Npm+nH1wSfpIQmhc4UX+eh7QlTCifN0LL4KG61rfrcWhmPS7+guQ4agyqIUJJ6gGpvRpZUiwFCAsPayq6PyXISgt5fdxrx//hgdQNCUlGUsA1Jhj5bygdRwmvMx6Ff7Uw2+HWrlcn5hNvULrcMmsbs+O26hTOWGSF27W4qEnAjmanauURkTgKuKy/Vyzx6vNOIcl8I2+v1ljf5pgIYrJiK0JLNKDS3epg7yJ/QIDAQAB",
   "permissions": [
     "storage",
@@ -27,7 +27,7 @@
         "lib/pdf.worker.min.js",
         "pdfReadingOrder.js",
         "update.js",
-        "scripts/install-native-host-mac.sh",
+        "scripts/install-native-host-mac.command",
         "scripts/install-native-host-windows.bat"
       ],
       "matches": ["<all_urls>"]

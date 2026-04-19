@@ -34,6 +34,11 @@ fi
 sudo cp "$PYTHON_HOST" "$DEST_SCRIPT"
 sudo chmod +x "$DEST_SCRIPT"
 
+# ── Guardar la ruta de la extensión para que el native host sepa dónde extraer ──
+CONFIG_DIR="$HOME/.config/navie"
+mkdir -p "$CONFIG_DIR"
+echo "$EXTENSION_DIR" > "$CONFIG_DIR/extension_path"
+
 # ── Crear directorio de Native Messaging hosts ───────────────────────────────
 mkdir -p "$INSTALL_DIR"
 
