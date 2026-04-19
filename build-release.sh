@@ -25,6 +25,7 @@ zip -r "$OUTPUT" \
   courseRegistry.js \
   updateManager.js \
   update.html \
+  update.js \
   intentRouter.js \
   syllabusIntelligence.js syllabusManager.js syllabusParser.js \
   attendance.js \

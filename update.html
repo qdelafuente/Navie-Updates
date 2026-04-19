@@ -27,10 +27,7 @@
       text-align: center;
     }
 
-    .icon {
-      font-size: 56px;
-      margin-bottom: 16px;
-    }
+    .icon { font-size: 56px; margin-bottom: 16px; }
 
     .badge {
       display: inline-block;
@@ -45,18 +42,9 @@
       margin-bottom: 16px;
     }
 
-    h1 {
-      font-size: 26px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: #1d1d1f;
-    }
+    h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
 
-    .subtitle {
-      font-size: 15px;
-      color: #6e6e73;
-      margin-bottom: 28px;
-    }
+    .subtitle { font-size: 15px; color: #6e6e73; margin-bottom: 28px; }
 
     .version-row {
       display: flex;
@@ -80,13 +68,11 @@
       margin-bottom: 4px;
     }
 
-    .version-number {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
+    .version-number { font-size: 20px; font-weight: 700; }
     .version-box.new .version-number { color: #007aff; }
     .version-box.old .version-number { color: #8e8e93; }
+
+    .arrow { display: flex; align-items: center; font-size: 20px; color: #c7c7cc; }
 
     .notes {
       background: #f5f5f7;
@@ -107,17 +93,9 @@
       margin-bottom: 8px;
     }
 
-    .notes-body {
-      font-size: 14px;
-      color: #3c3c43;
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
+    .notes-body { font-size: 14px; color: #3c3c43; line-height: 1.6; white-space: pre-wrap; }
 
-    .steps {
-      text-align: left;
-      margin-bottom: 28px;
-    }
+    .steps { text-align: left; margin-bottom: 28px; }
 
     .steps-title {
       font-size: 13px;
@@ -128,12 +106,7 @@
       margin-bottom: 12px;
     }
 
-    .step {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
+    .step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
 
     .step-num {
       background: #007aff;
@@ -150,12 +123,7 @@
       margin-top: 1px;
     }
 
-    .step-text {
-      font-size: 14px;
-      color: #3c3c43;
-      line-height: 1.5;
-    }
-
+    .step-text { font-size: 14px; color: #3c3c43; line-height: 1.5; }
     .step-text strong { color: #1d1d1f; }
 
     .os-selector {
@@ -200,6 +168,7 @@
       margin-bottom: 10px;
       transition: background 0.15s ease;
       text-decoration: none;
+      text-align: center;
     }
 
     .btn-primary:hover { background: #0066d6; }
@@ -218,12 +187,6 @@
     }
 
     .btn-secondary:hover { color: #3c3c43; }
-
-    .divider {
-      border: none;
-      border-top: 1px solid #e5e5ea;
-      margin: 24px 0;
-    }
 
     #successMsg {
       display: none;
@@ -248,7 +211,7 @@
         <div class="version-label">Tu versión</div>
         <div class="version-number" id="currentVersion">—</div>
       </div>
-      <div style="display:flex;align-items:center;font-size:20px;color:#c7c7cc;">→</div>
+      <div class="arrow">→</div>
       <div class="version-box new">
         <div class="version-label">Nueva versión</div>
         <div class="version-number" id="newVersion">—</div>
@@ -277,68 +240,16 @@
     </div>
 
     <div class="os-selector">
-      <button class="os-btn active" onclick="selectOS('windows')" id="btn-windows">🪟 Windows</button>
-      <button class="os-btn" onclick="selectOS('mac')" id="btn-mac">🍎 Mac</button>
+      <button class="os-btn" id="btn-windows">🪟 Windows</button>
+      <button class="os-btn" id="btn-mac">🍎 Mac</button>
     </div>
 
-    <div id="successMsg">✓ Script descargado. Ejecuta el archivo y luego recarga la extensión.</div>
+    <div id="successMsg">✓ Script descargado. Ejecútalo y luego recarga la extensión en chrome://extensions.</div>
 
-    <a id="downloadBtn" class="btn-primary" href="#" onclick="onDownload()">
-      ⬇️ Descargar script de actualización
-    </a>
-
-    <button class="btn-secondary" onclick="dismissUpdate()">
-      Recordármelo más tarde
-    </button>
+    <a id="downloadBtn" class="btn-primary" href="#">⬇️ Descargar script de actualización</a>
+    <button class="btn-secondary" id="dismissBtn">Recordármelo más tarde</button>
   </div>
 
-  <script>
-    let selectedOS = navigator.userAgent.includes("Mac") ? "mac" : "windows";
-    let updateInfo = {};
-
-    // Seleccionar OS automáticamente al cargar
-    window.addEventListener("load", async () => {
-      selectOS(selectedOS);
-
-      // Leer info del update desde storage
-      const { pendingUpdate } = await chrome.storage.local.get("pendingUpdate");
-      if (pendingUpdate) {
-        updateInfo = pendingUpdate;
-        document.getElementById("currentVersion").textContent = `v${pendingUpdate.currentVersion}`;
-        document.getElementById("newVersion").textContent = `v${pendingUpdate.newVersion}`;
-
-        if (pendingUpdate.releaseNotes && pendingUpdate.releaseNotes.trim()) {
-          document.getElementById("releaseNotes").textContent = pendingUpdate.releaseNotes;
-          document.getElementById("notesSection").style.display = "block";
-        }
-      }
-    });
-
-    function selectOS(os) {
-      selectedOS = os;
-      document.getElementById("btn-windows").classList.toggle("active", os === "windows");
-      document.getElementById("btn-mac").classList.toggle("active", os === "mac");
-    }
-
-    function getScriptUrl() {
-      if (selectedOS === "mac") {
-        return chrome.runtime.getURL("scripts/update-extension-mac.sh");
-      }
-      return chrome.runtime.getURL("scripts/update-extension-windows.bat");
-    }
-
-    function onDownload() {
-      const btn = document.getElementById("downloadBtn");
-      btn.href = getScriptUrl();
-      document.getElementById("successMsg").style.display = "block";
-    }
-
-    async function dismissUpdate() {
-      if (updateInfo.newVersion) {
-        await chrome.storage.local.set({ updateDismissedVersion: updateInfo.newVersion });
-      }
-      window.close();
-    }
-  </script>
+  <script src="update.js"></script>
 </body>
 </html>
