@@ -2163,13 +2163,13 @@ body {
 
 .check-updates-btn {
   width: 100%;
-  color: #dc2626;
-  border-color: rgba(220, 38, 38, 0.35);
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.35);
 }
 
 .check-updates-btn:hover {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.6);
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.6);
 }
 
 .delete-data-btn {
