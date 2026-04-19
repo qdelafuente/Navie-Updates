@@ -3,14 +3,15 @@
  *
  * Flujo:
  * 1. Cada hora (via chrome.alarms) checkea GitHub por nueva versión.
- * 2. Si hay versión nueva, descarga el ZIP automáticamente a la carpeta
- *    de Descargas del usuario via chrome.downloads.
- * 3. Abre update.html con instrucciones de 2 pasos:
- *    - Doble clic en el ZIP para extraer
- *    - Recargar Navie en chrome://extensions
+ * 2. Si hay versión nueva, el native host descarga e instala el ZIP
+ *    directamente en la carpeta de la extensión.
+ * 3. El usuario solo necesita hacer clic en ⟲ Reload en chrome://extensions.
+ *
+ * Setup único: el usuario ejecuta install-native-host-mac.command una sola vez.
  */
 
 const GITHUB_REPO = "qdelafuente/Navie-Updates";
+const NATIVE_HOST = "com.navie.updater";
 const UPDATE_CHECK_ALARM = "navieUpdateCheck";
 const UPDATE_CHECK_INTERVAL_MINUTES = 60;
 const STORAGE_KEY_DISMISSED = "updateDismissedVersion";
@@ -20,8 +21,8 @@ export function getLocalVersion() {
 }
 
 /**
- * Obtiene la última versión disponible desde GitHub Releases.
- * @returns {{ version: string, notes: string, zipUrl: string } | null}
+ * Obtiene la última versión desde GitHub Releases.
+ * @returns {{ version, notes, zipUrl } | null}
  */
 export async function fetchLatestRelease() {
   try {
@@ -55,31 +56,34 @@ export function compareVersions(a, b) {
 }
 
 /**
- * Descarga el ZIP automáticamente a la carpeta de Descargas.
- * @returns {number|null} downloadId o null si falla
+ * Envía un mensaje al native host.
  */
-async function downloadZip(zipUrl, newVersion) {
+function sendToNativeHost(msg) {
   return new Promise((resolve) => {
-    chrome.downloads.download(
-      {
-        url: zipUrl,
-        filename: `navie-extension-v${newVersion}.zip`,
-        saveAs: false,
-        conflictAction: "overwrite"
-      },
-      (downloadId) => {
-        if (chrome.runtime.lastError || downloadId === undefined) {
-          resolve(null);
+    try {
+      chrome.runtime.sendNativeMessage(NATIVE_HOST, msg, (response) => {
+        if (chrome.runtime.lastError) {
+          resolve({ ok: false, error: chrome.runtime.lastError.message });
         } else {
-          resolve(downloadId);
+          resolve(response || { ok: false, error: "Sin respuesta" });
         }
-      }
-    );
+      });
+    } catch (e) {
+      resolve({ ok: false, error: String(e) });
+    }
   });
 }
 
 /**
- * Checkea si hay actualización, la descarga y abre las instrucciones.
+ * Comprueba si el native host está instalado y responde.
+ */
+async function isNativeHostAvailable() {
+  const res = await sendToNativeHost({ action: "ping" });
+  return res?.ok === true;
+}
+
+/**
+ * Checkea si hay actualización, la instala via native host y notifica al usuario.
  */
 export async function checkForUpdate() {
   const release = await fetchLatestRelease();
@@ -93,25 +97,33 @@ export async function checkForUpdate() {
   const { [STORAGE_KEY_DISMISSED]: dismissed } = await chrome.storage.local.get(STORAGE_KEY_DISMISSED);
   if (dismissed === release.version) return { updateAvailable: false };
 
-  // Descargar ZIP automáticamente si tenemos la URL
-  let downloaded = false;
-  if (release.zipUrl) {
-    const downloadId = await downloadZip(release.zipUrl, release.version);
-    downloaded = downloadId !== null;
+  // Intentar instalación automática via native host
+  if (release.zipUrl && await isNativeHostAvailable()) {
+    const result = await sendToNativeHost({ action: "update", url: release.zipUrl });
+    if (result.ok) {
+      // Actualización instalada — notificar que solo falta recargar
+      chrome.notifications.create("navie-update-ready", {
+        type: "basic",
+        iconUrl: "Logo.png",
+        title: `Navie v${release.version} listo`,
+        message: "La actualización se instaló. Solo tienes que recargar la extensión en chrome://extensions.",
+        priority: 2,
+        buttons: [{ title: "Abrir chrome://extensions" }]
+      });
+      await chrome.storage.local.set({ pendingReload: { newVersion: release.version } });
+      return { updateAvailable: true, installed: true, newVersion: release.version };
+    }
   }
 
-  await openUpdatePage(release.version, localVersion, release.notes, downloaded);
-  return { updateAvailable: true, newVersion: release.version, downloaded };
+  // Native host no disponible — abrir página de actualización
+  await openUpdatePage(release.version, localVersion, release.notes);
+  return { updateAvailable: true, installed: false, newVersion: release.version };
 }
 
-/**
- * Abre update.html con la info del update.
- */
-async function openUpdatePage(newVersion, currentVersion, releaseNotes, downloaded) {
+async function openUpdatePage(newVersion, currentVersion, releaseNotes) {
   await chrome.storage.local.set({
-    pendingUpdate: { newVersion, currentVersion, releaseNotes, downloaded, timestamp: Date.now() }
+    pendingUpdate: { newVersion, currentVersion, releaseNotes, timestamp: Date.now() }
   });
-
   const updateUrl = chrome.runtime.getURL("update.html");
   const tabs = await chrome.tabs.query({ url: updateUrl });
   if (tabs.length > 0) {
@@ -129,6 +141,12 @@ export function initUpdateChecker() {
         delayInMinutes: 1,
         periodInMinutes: UPDATE_CHECK_INTERVAL_MINUTES
       });
+    }
+  });
+
+  chrome.notifications.onButtonClicked.addListener((notifId, btnIndex) => {
+    if (notifId === "navie-update-ready" && btnIndex === 0) {
+      chrome.tabs.create({ url: "chrome://extensions" });
     }
   });
 }
