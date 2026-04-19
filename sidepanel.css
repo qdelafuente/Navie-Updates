@@ -2161,6 +2161,17 @@ body {
   background: rgba(248, 113, 113, 0.12);
 }
 
+.check-updates-btn {
+  width: 100%;
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.check-updates-btn:hover {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.6);
+}
+
 .delete-data-btn {
   width: 100%;
   color: rgba(248, 113, 113, 0.85);
