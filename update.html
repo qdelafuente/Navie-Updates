@@ -21,13 +21,13 @@
       background: #fff;
       border-radius: 20px;
       padding: 48px 40px;
-      max-width: 540px;
+      max-width: 500px;
       width: 100%;
       box-shadow: 0 4px 40px rgba(0,0,0,0.10);
       text-align: center;
     }
 
-    .icon { font-size: 56px; margin-bottom: 16px; }
+    .icon { font-size: 52px; margin-bottom: 16px; }
 
     .badge {
       display: inline-block;
@@ -42,116 +42,90 @@
       margin-bottom: 16px;
     }
 
-    h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-    .subtitle { font-size: 15px; color: #6e6e73; margin-bottom: 28px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: #6e6e73; margin-bottom: 28px; }
 
     .version-row {
       display: flex;
       justify-content: center;
-      gap: 24px;
-      margin-bottom: 28px;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
     }
 
     .version-box {
       background: #f5f5f7;
       border-radius: 12px;
-      padding: 12px 20px;
-      min-width: 110px;
+      padding: 10px 20px;
+      min-width: 100px;
     }
 
-    .version-label {
-      font-size: 11px;
-      color: #8e8e93;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-
+    .version-label { font-size: 11px; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .version-number { font-size: 20px; font-weight: 700; }
     .version-box.new .version-number { color: #007aff; }
     .version-box.old .version-number { color: #8e8e93; }
-
-    .arrow { display: flex; align-items: center; font-size: 20px; color: #c7c7cc; }
-
-    .notes {
-      background: #f5f5f7;
-      border-radius: 12px;
-      padding: 16px 20px;
-      text-align: left;
-      margin-bottom: 28px;
-      max-height: 140px;
-      overflow-y: auto;
-    }
-
-    .notes-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #8e8e93;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .notes-body { font-size: 14px; color: #3c3c43; line-height: 1.6; white-space: pre-wrap; }
+    .arrow { font-size: 18px; color: #c7c7cc; }
 
     .steps { text-align: left; margin-bottom: 28px; }
 
-    .steps-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #8e8e93;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 8px;
     }
 
-    .step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .step.done { background: #f0fdf4; }
+    .step.todo { background: #f5f5f7; }
 
-    .step-num {
-      background: #007aff;
-      color: white;
-      font-size: 12px;
-      font-weight: 700;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .step-icon {
+      font-size: 22px;
       flex-shrink: 0;
       margin-top: 1px;
     }
 
-    .step-text { font-size: 14px; color: #3c3c43; line-height: 1.5; }
-    .step-text strong { color: #1d1d1f; }
+    .step-content { flex: 1; }
 
-    .os-selector {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      background: #f5f5f7;
-      border-radius: 10px;
-      padding: 4px;
-    }
-
-    .os-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      color: #6e6e73;
-      transition: all 0.15s ease;
-    }
-
-    .os-btn.active {
-      background: #fff;
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
       color: #1d1d1f;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+      margin-bottom: 2px;
     }
+
+    .step-title.done-text { color: #15803d; }
+
+    .step-desc {
+      font-size: 13px;
+      color: #6e6e73;
+      line-height: 1.5;
+    }
+
+    .filename {
+      display: inline-block;
+      background: #e5e7eb;
+      color: #374151;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+    }
+
+    .notes {
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: left;
+      margin-bottom: 24px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .notes-title { font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .notes-body { font-size: 13px; color: #3c3c43; line-height: 1.5; white-space: pre-wrap; }
 
     .btn-primary {
       display: block;
@@ -165,11 +139,8 @@
       font-weight: 600;
       cursor: pointer;
       margin-bottom: 10px;
-      transition: background 0.15s ease;
-      text-decoration: none;
-      text-align: center;
+      transition: background 0.15s;
     }
-
     .btn-primary:hover { background: #0066d6; }
 
     .btn-secondary {
@@ -178,51 +149,11 @@
       background: transparent;
       color: #8e8e93;
       border: none;
-      border-radius: 12px;
-      padding: 10px 20px;
+      padding: 10px;
       font-size: 13px;
       cursor: pointer;
-      transition: color 0.15s ease;
     }
-
     .btn-secondary:hover { color: #3c3c43; }
-
-    #successMsg {
-      display: none;
-      background: #e8f5e9;
-      color: #2e7d32;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    /* Mode: solo recarga (native host instalado) */
-    #reloadSection {
-      display: none;
-    }
-
-    .reload-box {
-      background: #e8f5e9;
-      border-radius: 16px;
-      padding: 28px 24px;
-      margin-bottom: 24px;
-    }
-
-    .reload-icon { font-size: 48px; margin-bottom: 12px; }
-
-    .reload-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1d1d1f;
-      margin-bottom: 8px;
-    }
-
-    .reload-subtitle {
-      font-size: 14px;
-      color: #3c3c43;
-      line-height: 1.5;
-    }
   </style>
 </head>
 <body>
@@ -230,76 +161,58 @@
     <div class="icon">🔄</div>
     <span class="badge">Actualización disponible</span>
     <h1>Nueva versión de Navie</h1>
-    <p class="subtitle" id="subtitleText">Sigue los pasos para instalar la actualización.</p>
+    <p class="subtitle">El ZIP ya se está descargando en tu carpeta de Descargas.</p>
 
     <div class="version-row">
       <div class="version-box old">
-        <div class="version-label">Tu versión</div>
+        <div class="version-label">Actual</div>
         <div class="version-number" id="currentVersion">—</div>
       </div>
       <div class="arrow">→</div>
       <div class="version-box new">
-        <div class="version-label">Nueva versión</div>
+        <div class="version-label">Nueva</div>
         <div class="version-number" id="newVersion">—</div>
       </div>
     </div>
 
     <div class="notes" id="notesSection" style="display:none;">
-      <div class="notes-title">Cambios en esta versión</div>
+      <div class="notes-title">Novedades</div>
       <div class="notes-body" id="releaseNotes"></div>
     </div>
 
-    <!-- Modo A: native host ya instalado — solo recarga -->
-    <div id="reloadSection">
-      <div class="reload-box">
-        <div class="reload-icon">✅</div>
-        <div class="reload-title">¡Actualización descargada!</div>
-        <div class="reload-subtitle">
-          La nueva versión está lista en tu equipo.<br>
-          Solo necesitas recargar la extensión.
+    <div class="steps">
+
+      <div class="step done">
+        <div class="step-icon">✅</div>
+        <div class="step-content">
+          <div class="step-title done-text">ZIP descargado en Descargas</div>
+          <div class="step-desc">
+            Busca el archivo:<br>
+            <span class="filename" id="zipFilename">navie-extension-vX.X.X.zip</span>
+          </div>
         </div>
       </div>
 
-      <div class="steps" style="margin-bottom: 20px;">
-        <div class="steps-title">Un solo paso</div>
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-text">Haz clic en el botón de abajo y luego en <strong>⟲</strong> junto a Navie.</div>
+      <div class="step todo">
+        <div class="step-icon">1️⃣</div>
+        <div class="step-content">
+          <div class="step-title">Extrae el ZIP</div>
+          <div class="step-desc">Doble clic en el archivo → se crea una carpeta con los archivos actualizados.</div>
         </div>
       </div>
 
-      <button id="openExtensionsBtn" class="btn-primary">Abrir chrome://extensions</button>
-      <button class="btn-secondary" id="dismissBtn">Recordármelo más tarde</button>
+      <div class="step todo">
+        <div class="step-icon">2️⃣</div>
+        <div class="step-content">
+          <div class="step-title">Recarga la extensión</div>
+          <div class="step-desc">Haz clic en el botón de abajo → pulsa <strong>⟲</strong> junto a Navie.</div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Modo B: necesita instalar el native host primero -->
-    <div id="installSection">
-      <div id="stepsSection" class="steps">
-        <div class="steps-title">Cómo activar las actualizaciones automáticas</div>
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-text">Descarga el instalador para tu sistema operativo.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-text"><strong>Doble clic</strong> en el archivo — instala el actualizador automático.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-text">Recarga Navie en <strong>chrome://extensions</strong>. Las próximas actualizaciones serán automáticas.</div>
-        </div>
-      </div>
-
-      <div id="osSelectorSection" class="os-selector">
-        <button class="os-btn" id="btn-windows">🪟 Windows</button>
-        <button class="os-btn" id="btn-mac">🍎 Mac</button>
-      </div>
-
-      <div id="successMsg">✓ Instalador descargado. Ejecútalo y luego recarga Navie en chrome://extensions.</div>
-
-      <a id="downloadBtn" class="btn-primary" href="#">⬇️ Descargar instalador del actualizador</a>
-      <button class="btn-secondary" id="dismissBtnInstall">Recordármelo más tarde</button>
-    </div>
+    <button id="openExtensionsBtn" class="btn-primary">Abrir chrome://extensions</button>
+    <button id="dismissBtn" class="btn-secondary">Recordármelo más tarde</button>
   </div>
 
   <script src="update.js"></script>
