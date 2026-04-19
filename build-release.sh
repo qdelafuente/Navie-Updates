@@ -43,6 +43,7 @@ zip -r "$OUTPUT" \
   userIdentity.js \
   Logo.png \
   scripts/ \
+  native-host/ \
   lib/ \
   assets/ \
   src/ \

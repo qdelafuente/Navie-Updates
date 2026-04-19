@@ -1,16 +1,19 @@
 /**
  * updateManager.js — Sistema de actualizaciones automáticas para Navie.
  *
- * Flujo:
- * 1. Cada hora (via chrome.alarms), checkea GitHub por nueva versión
- * 2. Si hay versión nueva, abre update.html con UI bonita
- * 3. Usuario descarga script (.bat o .sh) y ejecuta con doble clic
- * 4. Usuario recarga extensión en chrome://extensions
+ * Flujo con Native Messaging (actualización 1-clic):
+ * 1. Cada hora (via chrome.alarms) checkea GitHub por nueva versión.
+ * 2. Si hay versión nueva, intenta instalarla automáticamente via Native Messaging.
+ *    - Si el native host está instalado: descarga y extrae el ZIP al directorio de la extensión.
+ *      El usuario solo necesita hacer clic en ⟲ Reload en chrome://extensions.
+ *    - Si el native host NO está instalado: abre update.html con instrucciones de instalación.
+ * 3. Una vez instalado el native host, todas las actualizaciones futuras son automáticas.
  */
 
 const GITHUB_REPO = "qdelafuente/Navie-Updates";
+const NATIVE_HOST = "com.navie.updater";
 const UPDATE_CHECK_ALARM = "navieUpdateCheck";
-const UPDATE_CHECK_INTERVAL_MINUTES = 60; // cada hora
+const UPDATE_CHECK_INTERVAL_MINUTES = 60;
 const STORAGE_KEY_DISMISSED = "updateDismissedVersion";
 
 /**
@@ -22,7 +25,7 @@ export function getLocalVersion() {
 
 /**
  * Obtiene la última versión disponible desde GitHub Releases.
- * @returns {{ version: string, notes: string, publishedAt: string } | null}
+ * @returns {{ version: string, notes: string, zipUrl: string } | null}
  */
 export async function fetchLatestRelease() {
   try {
@@ -35,10 +38,14 @@ export async function fetchLatestRelease() {
     );
     if (!res.ok) return null;
     const data = await res.json();
-    const version = (data.tag_name || "").replace(/^v/, ""); // "v0.3.1" → "0.3.1"
+    const version = (data.tag_name || "").replace(/^v/, "");
     const notes = data.body || "";
-    const publishedAt = data.published_at || "";
-    return { version, notes, publishedAt };
+
+    // Encontrar el asset ZIP de la extensión
+    const zipAsset = (data.assets || []).find(a => a.name.endsWith(".zip"));
+    const zipUrl = zipAsset?.browser_download_url || null;
+
+    return { version, notes, zipUrl };
   } catch {
     return null;
   }
@@ -59,42 +66,136 @@ export function compareVersions(a, b) {
 }
 
 /**
- * Checkea si hay actualización disponible y si el usuario ya la descartó.
- * Exportada para poder llamarla manualmente desde el botón de settings.
+ * Verifica si el native host está instalado enviando un ping.
+ * @returns {boolean}
+ */
+async function isNativeHostAvailable() {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendNativeMessage(NATIVE_HOST, { action: "ping" }, (response) => {
+        if (chrome.runtime.lastError || !response?.ok) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+/**
+ * Obtiene el directorio de la extensión en disco.
+ * chrome.runtime.getURL devuelve chrome-extension://ID/...,
+ * necesitamos la ruta real del sistema de archivos.
+ * El native host la recibe para saber dónde extraer el ZIP.
+ */
+function getExtensionDirectory() {
+  // En una extensión desempaquetada, la ruta está en el ID del runtime.
+  // El native host calculará la ruta desde el extensionId proporcionado.
+  return chrome.runtime.id;
+}
+
+/**
+ * Envía el ZIP al native host para que lo instale.
+ * @returns {{ ok: boolean, message: string }}
+ */
+async function installViaNameativeHost(zipUrl) {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendNativeMessage(
+        NATIVE_HOST,
+        {
+          action: "update",
+          url: zipUrl,
+          extensionId: chrome.runtime.id
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve({ ok: false, message: chrome.runtime.lastError.message });
+          } else {
+            resolve(response || { ok: false, message: "No response" });
+          }
+        }
+      );
+    } catch (e) {
+      resolve({ ok: false, message: String(e) });
+    }
+  });
+}
+
+/**
+ * Checkea si hay actualización disponible y la instala automáticamente si es posible.
+ * Exportada para llamarla manualmente desde el botón de settings.
+ * @returns {{ updateAvailable: boolean, installed: boolean, needsNativeHost: boolean, newVersion?: string }}
  */
 export async function checkForUpdate() {
   const release = await fetchLatestRelease();
-  if (!release) return;
+  if (!release) return { updateAvailable: false };
 
   const localVersion = getLocalVersion();
-  if (compareVersions(release.version, localVersion) <= 0) return; // no hay update
+  if (compareVersions(release.version, localVersion) <= 0) {
+    return { updateAvailable: false };
+  }
 
   // Ver si el usuario ya descartó esta versión
   const { [STORAGE_KEY_DISMISSED]: dismissed } = await chrome.storage.local.get(STORAGE_KEY_DISMISSED);
-  if (dismissed === release.version) return;
+  if (dismissed === release.version) return { updateAvailable: false };
 
-  // Hay update disponible → abrir página de actualización
-  await openUpdatePage(release.version, localVersion, release.notes);
+  // Hay update disponible — ¿tenemos native host?
+  const nativeHostOk = await isNativeHostAvailable();
+
+  if (nativeHostOk && release.zipUrl) {
+    // Instalación automática
+    const result = await installViaNameativeHost(release.zipUrl);
+    if (result.ok) {
+      // Notificar al usuario que solo necesita recargar
+      await notifyReloadNeeded(release.version);
+      return { updateAvailable: true, installed: true, newVersion: release.version };
+    }
+    // Si falla la instalación automática, caer al flujo manual
+  }
+
+  // Sin native host o instalación fallida → abrir página de actualización
+  await openUpdatePage(release.version, localVersion, release.notes, !nativeHostOk);
+  return { updateAvailable: true, installed: false, needsNativeHost: !nativeHostOk, newVersion: release.version };
+}
+
+/**
+ * Muestra una notificación pidiendo al usuario que recargue la extensión.
+ */
+async function notifyReloadNeeded(newVersion) {
+  await chrome.storage.local.set({
+    pendingReload: { newVersion, timestamp: Date.now() }
+  });
+
+  chrome.notifications.create("navie-reload-needed", {
+    type: "basic",
+    iconUrl: "Logo.png",
+    title: "Navie actualizado a v" + newVersion,
+    message: "La nueva versión está lista. Ve a chrome://extensions y haz clic en ⟲ Reload en Navie.",
+    priority: 2,
+    buttons: [{ title: "Abrir chrome://extensions" }]
+  });
 }
 
 /**
  * Abre la página de actualización como tab.
+ * @param {boolean} needsNativeHost — si true, mostrar instrucciones de instalación del host
  */
-async function openUpdatePage(newVersion, currentVersion, releaseNotes) {
-  // Guardar info en storage para que update.html la lea
+async function openUpdatePage(newVersion, currentVersion, releaseNotes, needsNativeHost = false) {
   await chrome.storage.local.set({
     pendingUpdate: {
       newVersion,
       currentVersion,
       releaseNotes,
+      needsNativeHost,
       timestamp: Date.now()
     }
   });
 
-  // Abrir la página de update
   const updateUrl = chrome.runtime.getURL("update.html");
-
-  // Si ya hay una tab de update abierta, activarla en vez de abrir otra
   const tabs = await chrome.tabs.query({ url: updateUrl });
   if (tabs.length > 0) {
     chrome.tabs.update(tabs[0].id, { active: true });
@@ -106,21 +207,27 @@ async function openUpdatePage(newVersion, currentVersion, releaseNotes) {
 
 /**
  * Registra la alarma de checkeo de actualizaciones.
- * Llamar desde background.js al inicializar.
  */
 export function initUpdateChecker() {
   chrome.alarms.get(UPDATE_CHECK_ALARM, (alarm) => {
     if (!alarm) {
       chrome.alarms.create(UPDATE_CHECK_ALARM, {
-        delayInMinutes: 1, // primer check a los 1 min de abrir el navegador
+        delayInMinutes: 1,
         periodInMinutes: UPDATE_CHECK_INTERVAL_MINUTES
       });
+    }
+  });
+
+  // Manejar clic en botón de notificación
+  chrome.notifications.onButtonClicked.addListener((notifId, btnIndex) => {
+    if (notifId === "navie-reload-needed" && btnIndex === 0) {
+      chrome.tabs.create({ url: "chrome://extensions" });
     }
   });
 }
 
 /**
- * Handler para la alarma. Llamar desde chrome.alarms.onAlarm.addListener en background.js.
+ * Handler para la alarma.
  */
 export async function handleUpdateAlarm(alarm) {
   if (alarm?.name === UPDATE_CHECK_ALARM) {

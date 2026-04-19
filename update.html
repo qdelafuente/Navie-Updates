@@ -21,7 +21,7 @@
       background: #fff;
       border-radius: 20px;
       padding: 48px 40px;
-      max-width: 520px;
+      max-width: 540px;
       width: 100%;
       box-shadow: 0 4px 40px rgba(0,0,0,0.10);
       text-align: center;
@@ -43,7 +43,6 @@
     }
 
     h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-
     .subtitle { font-size: 15px; color: #6e6e73; margin-bottom: 28px; }
 
     .version-row {
@@ -197,6 +196,33 @@
       font-size: 14px;
       margin-bottom: 10px;
     }
+
+    /* Mode: solo recarga (native host instalado) */
+    #reloadSection {
+      display: none;
+    }
+
+    .reload-box {
+      background: #e8f5e9;
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+    }
+
+    .reload-icon { font-size: 48px; margin-bottom: 12px; }
+
+    .reload-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+    }
+
+    .reload-subtitle {
+      font-size: 14px;
+      color: #3c3c43;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -204,7 +230,7 @@
     <div class="icon">🔄</div>
     <span class="badge">Actualización disponible</span>
     <h1>Nueva versión de Navie</h1>
-    <p class="subtitle">Descarga e instala la actualización en 2 minutos.</p>
+    <p class="subtitle" id="subtitleText">Sigue los pasos para instalar la actualización.</p>
 
     <div class="version-row">
       <div class="version-box old">
@@ -223,31 +249,57 @@
       <div class="notes-body" id="releaseNotes"></div>
     </div>
 
-    <div class="steps">
-      <div class="steps-title">Cómo actualizar</div>
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text">Descarga el script de actualización para tu sistema.</div>
+    <!-- Modo A: native host ya instalado — solo recarga -->
+    <div id="reloadSection">
+      <div class="reload-box">
+        <div class="reload-icon">✅</div>
+        <div class="reload-title">¡Actualización descargada!</div>
+        <div class="reload-subtitle">
+          La nueva versión está lista en tu equipo.<br>
+          Solo necesitas recargar la extensión.
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text"><strong>Doble clic</strong> en el archivo descargado — actualiza automáticamente.</div>
+
+      <div class="steps" style="margin-bottom: 20px;">
+        <div class="steps-title">Un solo paso</div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Haz clic en el botón de abajo y luego en <strong>⟲</strong> junto a Navie.</div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text">Ve a <strong>chrome://extensions</strong> y haz clic en <strong>⟲ Recarga</strong> en Navie.</div>
-      </div>
+
+      <button id="openExtensionsBtn" class="btn-primary">Abrir chrome://extensions</button>
+      <button class="btn-secondary" id="dismissBtn">Recordármelo más tarde</button>
     </div>
 
-    <div class="os-selector">
-      <button class="os-btn" id="btn-windows">🪟 Windows</button>
-      <button class="os-btn" id="btn-mac">🍎 Mac</button>
+    <!-- Modo B: necesita instalar el native host primero -->
+    <div id="installSection">
+      <div id="stepsSection" class="steps">
+        <div class="steps-title">Cómo activar las actualizaciones automáticas</div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Descarga el instalador para tu sistema operativo.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Doble clic</strong> en el archivo — instala el actualizador automático.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Recarga Navie en <strong>chrome://extensions</strong>. Las próximas actualizaciones serán automáticas.</div>
+        </div>
+      </div>
+
+      <div id="osSelectorSection" class="os-selector">
+        <button class="os-btn" id="btn-windows">🪟 Windows</button>
+        <button class="os-btn" id="btn-mac">🍎 Mac</button>
+      </div>
+
+      <div id="successMsg">✓ Instalador descargado. Ejecútalo y luego recarga Navie en chrome://extensions.</div>
+
+      <a id="downloadBtn" class="btn-primary" href="#">⬇️ Descargar instalador del actualizador</a>
+      <button class="btn-secondary" id="dismissBtnInstall">Recordármelo más tarde</button>
     </div>
-
-    <div id="successMsg">✓ Script descargado. Ejecútalo y luego recarga la extensión en chrome://extensions.</div>
-
-    <a id="downloadBtn" class="btn-primary" href="#">⬇️ Descargar script de actualización</a>
-    <button class="btn-secondary" id="dismissBtn">Recordármelo más tarde</button>
   </div>
 
   <script src="update.js"></script>
