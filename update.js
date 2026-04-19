@@ -7,29 +7,40 @@ async function init() {
   const { pendingUpdate } = await chrome.storage.local.get("pendingUpdate");
   if (!pendingUpdate) return;
 
-  const { newVersion, currentVersion, releaseNotes, downloaded } = pendingUpdate;
+  const { newVersion, currentVersion, releaseNotes, installed } = pendingUpdate;
 
   document.getElementById("currentVersion").textContent = `v${currentVersion}`;
   document.getElementById("newVersion").textContent = `v${newVersion}`;
-  document.getElementById("zipFilename").textContent = `navie-extension-v${newVersion}.zip`;
 
   if (releaseNotes && releaseNotes.trim()) {
     document.getElementById("releaseNotes").textContent = releaseNotes;
     document.getElementById("notesSection").style.display = "block";
   }
 
-  // Si la descarga falló, cambiar el primer paso para indicarlo
-  if (!downloaded) {
-    const firstStep = document.querySelector(".step.done");
-    if (firstStep) {
-      firstStep.classList.remove("done");
-      firstStep.classList.add("todo");
-      firstStep.querySelector(".step-icon").textContent = "⚠️";
-      firstStep.querySelector(".step-title").textContent = "El ZIP no se pudo descargar";
-      firstStep.querySelector(".step-title").classList.remove("done-text");
-      firstStep.querySelector(".step-desc").innerHTML =
-        'Descárgalo manualmente desde <strong>github.com/qdelafuente/Navie-Updates/releases</strong>';
-    }
+  if (installed) {
+    // Native host instaló el ZIP — solo falta recargar
+    document.getElementById("subtitle").textContent =
+      "La actualización ya está instalada. Solo tienes que recargar.";
+    document.getElementById("stepsContainer").innerHTML = `
+      <div class="step done">
+        <div class="step-icon">✅</div>
+        <div class="step-content">
+          <div class="step-title done-text">Actualización instalada automáticamente</div>
+          <div class="step-desc">Los archivos de v${newVersion} ya están en tu equipo.</div>
+        </div>
+      </div>
+      <div class="step todo">
+        <div class="step-icon">1️⃣</div>
+        <div class="step-content">
+          <div class="step-title">Recarga la extensión</div>
+          <div class="step-desc">Haz clic en el botón de abajo → pulsa <strong>⟲</strong> junto a Navie.</div>
+        </div>
+      </div>
+    `;
+  } else {
+    // Sin native host — la zipFilename ya está en el HTML estático
+    const filenameEl = document.getElementById("zipFilename");
+    if (filenameEl) filenameEl.textContent = `navie-extension-v${newVersion}.zip`;
   }
 }
 

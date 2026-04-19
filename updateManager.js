@@ -83,14 +83,17 @@ export async function checkForUpdate() {
   if (release.zipUrl && await isNativeHostAvailable()) {
     const result = await sendToNativeHost({ action: "update", url: release.zipUrl });
     if (result.ok) {
-      chrome.notifications.create("navie-update-ready", {
-        type: "basic",
-        iconUrl: "Logo.png",
-        title: `Navie v${release.version} listo`,
-        message: "La actualización se instaló. Solo tienes que recargar la extensión.",
-        priority: 2,
-        buttons: [{ title: "Abrir chrome://extensions" }]
+      // Instalación exitosa — abrir update.html en modo "solo recarga"
+      await chrome.storage.local.set({
+        pendingUpdate: {
+          newVersion: release.version,
+          currentVersion: localVersion,
+          releaseNotes: release.notes,
+          installed: true,
+          timestamp: Date.now()
+        }
       });
+      chrome.tabs.create({ url: chrome.runtime.getURL("update.html") });
       return { updateAvailable: true, installed: true, newVersion: release.version };
     }
   }
